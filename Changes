@@ -1,0 +1,8 @@
+Revision history for PGObject-Simple
+
+1.00    2013-05-26
+        First version, released on an unsuspecting world.
+        Changes from LedgerSMB's API include:
+          1.  call_procedure uses funcname instead of procname argument
+          2.  main mapper is called call_dbmethod instead of exec_method
+          3.  Fewer assumptions regarding database connection handling

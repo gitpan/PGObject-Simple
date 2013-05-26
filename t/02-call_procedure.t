@@ -1,0 +1,60 @@
+use PGObject::Simple;
+use Test::More tests => 4;
+use DBI;
+
+my %hash = (
+   foo => 'foo',
+   bar => 'baz',
+   baz => '2',
+   id  => '33',
+);
+
+my $dbh1 = DBI->connect('dbi:Pg:dbname=postgres', 'postgres');
+$dbh1->do('CREATE DATABASE pgobject_test_db') if $dbh1;
+
+
+my $dbh = DBI->connect('dbi:Pg:dbname=pgobject_test_db', 'postgres');
+$dbh->do('
+   CREATE FUNCTION public.foobar (in_foo text, in_bar text, in_baz int, in_id int)
+      RETURNS int language sql as $$
+          SELECT char_length($1) + char_length($2) + $3 * $4;
+      $$;
+') if $dbh;
+
+my $answer = 72;
+
+SKIP: {
+   skip 'No database connection', 4 unless $dbh;
+   my $obj = PGObject::Simple->new(%hash);
+   $obj->set_dbh($dbh);
+   my ($ref) = $obj->call_procedure(
+      funcname => 'foobar',
+      args => ['text', 'text2', '5', '30']
+   );
+   is ($ref->{foobar}, 159, 'Correct value returned, call_procedure');
+
+   ($ref) = $obj->call_procedure(
+      funcname => 'foobar',
+      funcschema => 'public',
+      args => ['text1', 'text2', '5', '30']
+   );
+
+   is ($ref->{foobar}, 160, 'Correct value returned, call_procedure w/schema');
+
+   ($ref) = $obj->call_dbmethod(
+      funcname => 'foobar'
+   );
+
+   is ($ref->{foobar}, $answer, 'Correct value returned, call_dbmethod');
+
+   ($ref) = $obj->call_dbmethod(
+      funcname => 'foobar',
+      args     => {id => 4}
+   );
+
+   is ($ref->{foobar}, 14, 'Correct value returned, call_dbmethod w/args');
+}
+
+$dbh->disconnect if $dbh;
+$dbh1->do('DROP DATABASE pgobject_test_db') if $dbh1;
+$dbh1->disconnect if $dbh1;
