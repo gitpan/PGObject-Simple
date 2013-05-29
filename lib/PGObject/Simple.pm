@@ -12,11 +12,11 @@ PGObject::Simple - Minimalist stored procedure mapper based on LedgerSMB's DBObj
 
 =head1 VERSION
 
-Version 1.0
+Version 1.1
 
 =cut
 
-our $VERSION = '1.0';
+our $VERSION = '1.1';
 
 
 =head1 SYNOPSIS
@@ -90,7 +90,9 @@ about stored procedures and makes them much more application friendly.
 =head2 new
 
 This constructs a new object.  Basically it copies the incoming hash (one level
-deep) and then blesses it.  It does not set the dbh or anything.
+deep) and then blesses it.  If the hash passed in has a dbh member, the dbh 
+is set to that.  This does not set the function prefix, as this is assumed to 
+be done implicitly by subclasses.
 
 =cut
 
@@ -104,7 +106,9 @@ sub new {
     return $ref;
 }
 
-=head2 set_dbh
+=head2 set_dbh($dbh)
+
+Sets the database handle (needs DBD::Pg 2.0 or later) to $dbh
 
 =cut
 
@@ -113,17 +117,41 @@ sub set_dbh {
     $self->{_DBH} = $dbh;
 }
 
+=head2 _set_funcprefix
+
+This sets the default funcprefix for future calls.  The funcprefix can still be
+overridden by passing in an explicit '' in a call.  This is used to "claim" a 
+certain set of stored procedures in the database for use by an object.
+
+It is semi-private, intended to be called by subclasses directly, perhaps in 
+constructors, but not from outside the object.
+
+=cut
+
+sub _set_funcprefix {
+    my ($self, $funcprefix) = @_;
+    $self->{_func_prefix} = $funcprefix;
+}
+
 =head2 call_dbmethod
+
+Does a straight-forward mapping (as described below) to the stored procedure 
+arguments.  Stored procedure arguments are looked up, a leading 'in_' is 
+stripped off where it exists, and the remaining string mapped back to an 
+object property.  The $args{args} hashref can be used to override arguments by
+name.  Unknown properties are handled simply by passing a NULL in, so the
+stored procedures should be prepared to handle these.
 
 =cut
 
 sub call_dbmethod {
     my ($self) = shift @_;
     my %args = @_;
-    $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
     croak 'No function name provided' unless $args{funcname};
-    croak 'No DB handle provided' unless $args{dbh};
+    $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
 
+    $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
+    $args{funcprefix} ||= '';
     my $info = PGObject->function_info(%args);
 
     my $dbargs = [];
@@ -148,13 +176,17 @@ sub call_dbmethod {
 =head2 call_procedure 
 
 This is a lightweight wrapper around PGObject->call_procedure which merely
-passes the currently attached db connection in.
+passes the currently attached db connection in.  We use the previously set 
+funcprefix and dbh by default but other values can be passed in to override the
+default object's values.
 
 =cut
 
 sub call_procedure {
     my ($self) = shift @_;
     my %args = @_;
+    $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
+    $args{funcprefix} ||= '';
 
     $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
 
@@ -261,12 +293,36 @@ L<http://search.cpan.org/dist/PGObject-Simple/>
 
 Copyright 2013 Chris Travers.
 
-This program is free software; you can redistribute it and/or modify it
-under the terms of either: the GNU General Public License as published
-by the Free Software Foundation; or the Artistic License.
+Redistribution and use in source and compiled forms with or without 
+modification, are permitted provided that the following conditions are met:
 
-See http://dev.perl.org/licenses/ for more information.
+=over
 
+=item 
+
+Redistributions of source code must retain the above
+copyright notice, this list of conditions and the following disclaimer as the
+first lines of this file unmodified.
+
+=item 
+
+Redistributions in compiled form must reproduce the above copyright
+notice, this list of conditions and the following disclaimer in the
+source code, documentation, and/or other materials provided with the 
+distribution.
+
+=back
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR(S) "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE AUTHOR(S) BE LIABLE FOR
+ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =cut
 

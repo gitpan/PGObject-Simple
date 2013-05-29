@@ -1,5 +1,9 @@
 Revision history for PGObject-Simple
 
+1.10    2013-05-30
+        1. Added function prefix support.
+        2. More documentation
+
 1.00    2013-05-26
         First version, released on an unsuspecting world.
         Changes from LedgerSMB's API include:

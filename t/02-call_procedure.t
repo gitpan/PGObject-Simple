@@ -1,5 +1,5 @@
 use PGObject::Simple;
-use Test::More tests => 4;
+use Test::More tests => 6;
 use DBI;
 
 my %hash = (
@@ -24,7 +24,7 @@ $dbh->do('
 my $answer = 72;
 
 SKIP: {
-   skip 'No database connection', 4 unless $dbh;
+   skip 'No database connection', 6 unless $dbh;
    my $obj = PGObject::Simple->new(%hash);
    $obj->set_dbh($dbh);
    my ($ref) = $obj->call_procedure(
@@ -53,6 +53,19 @@ SKIP: {
    );
 
    is ($ref->{foobar}, 14, 'Correct value returned, call_dbmethod w/args');
+   $obj->_set_funcprefix('foo');
+   ($ref) = ($ref) = $obj->call_dbmethod(
+      funcname => 'bar',
+      args     => {id => 4}
+   );
+   is ($ref->{foobar}, 14, 'Correct value returned, call_dbmethod w/args/prefix');
+   ($ref) = ($ref) = $obj->call_dbmethod(
+      funcname => 'oobar',
+      args     => {id => 4},
+    funcprefix => 'f'
+   );
+   is ($ref->{foobar}, 14, 'Correct value returned, call_dbmethod w/exp. pre.');
+
 }
 
 $dbh->disconnect if $dbh;
