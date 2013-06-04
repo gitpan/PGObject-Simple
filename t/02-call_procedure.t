@@ -9,6 +9,7 @@ my %hash = (
    id  => '33',
 );
 
+plan skip_all => 'Not set up for db tests' unless $ENV{TEST_DB};
 my $dbh1 = DBI->connect('dbi:Pg:dbname=postgres', 'postgres');
 $dbh1->do('CREATE DATABASE pgobject_test_db') if $dbh1;
 

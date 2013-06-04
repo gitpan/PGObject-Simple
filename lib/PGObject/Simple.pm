@@ -12,11 +12,11 @@ PGObject::Simple - Minimalist stored procedure mapper based on LedgerSMB's DBObj
 
 =head1 VERSION
 
-Version 1.1
+Version 1.2
 
 =cut
 
-our $VERSION = '1.1';
+our $VERSION = '1.2';
 
 
 =head1 SYNOPSIS
@@ -133,6 +133,19 @@ sub _set_funcprefix {
     $self->{_func_prefix} = $funcprefix;
 }
 
+=head2 _set_registry
+
+This sets the registry for future calls.  The idea here is that this allows for
+application object model wrappers to set which registry they are using, both for
+predictability and ensuring that interoperability is possible.
+
+=cut
+
+sub _set_registry {
+    my ($self, $registry) = @_;
+    $self->{_registry} = $registry;
+}
+
 =head2 call_dbmethod
 
 Does a straight-forward mapping (as described below) to the stored procedure 
@@ -187,6 +200,7 @@ sub call_procedure {
     my %args = @_;
     $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
     $args{funcprefix} ||= '';
+    $args{registry} = $self->{_registry} if !defined $args{registry};
 
     $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
 
