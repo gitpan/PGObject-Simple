@@ -1,5 +1,8 @@
 Revision history for PGObject-Simple
 
+1.3     2013-06-07
+        1. Fixed test case that caused thins to bomb
+
 1.2     2013-06-05
         1. Added registry support
         2. Additional safety checks for database tests

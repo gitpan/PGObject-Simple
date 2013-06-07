@@ -1,5 +1,5 @@
 use PGObject::Simple;
-use Test::More tests => 6;
+use Test::More;
 use DBI;
 
 my %hash = (
@@ -10,6 +10,7 @@ my %hash = (
 );
 
 plan skip_all => 'Not set up for db tests' unless $ENV{TEST_DB};
+plan tests => 6;
 my $dbh1 = DBI->connect('dbi:Pg:dbname=postgres', 'postgres');
 $dbh1->do('CREATE DATABASE pgobject_test_db') if $dbh1;
 
