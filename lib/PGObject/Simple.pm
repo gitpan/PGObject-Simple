@@ -12,11 +12,11 @@ PGObject::Simple - Minimalist stored procedure mapper based on LedgerSMB's DBObj
 
 =head1 VERSION
 
-Version 1.3
+Version 1.4
 
 =cut
 
-our $VERSION = '1.3';
+our $VERSION = '1.4';
 
 
 =head1 SYNOPSIS
@@ -161,16 +161,18 @@ sub call_dbmethod {
     my ($self) = shift @_;
     my %args = @_;
     croak 'No function name provided' unless $args{funcname};
-    $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
+    if (eval { $self->isa(__PACKAGE__) } and ref $self){
+        $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
 
-    $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
+        $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
+    }
     $args{funcprefix} ||= '';
     my $info = PGObject->function_info(%args);
 
     my $dbargs = [];
     for my $arg (@{$info->{args}}){
         $arg->{name} =~ s/^in_//;
-        my $db_arg = $self->{$arg->{name}};
+        my $db_arg = $self->{$arg->{name}} if ref $self;
         if ($args{args}->{$arg->{name}}){
            $db_arg = $args{args}->{$arg->{name}};
         }
@@ -183,7 +185,10 @@ sub call_dbmethod {
         push @$dbargs, $db_arg;
     }
     $args{args} = $dbargs;
-    return $self->call_procedure(%args);
+    # The conditional return is necessary since the object may carry a registry
+    # --CT
+    return $self->call_procedure(%args) if ref $self;
+    return __PACKAGE__->call_procedure(%args);
 }
 
 =head2 call_procedure 
@@ -198,11 +203,13 @@ default object's values.
 sub call_procedure {
     my ($self) = shift @_;
     my %args = @_;
-    $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
-    $args{funcprefix} ||= '';
-    $args{registry} = $self->{_registry} if !defined $args{registry};
+    if (eval { $self->isa(__PACKAGE__) } and ref $self ){
+        $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
+        $args{registry} = $self->{_registry} if !defined $args{registry};
 
-    $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
+        $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
+    }
+    $args{funcprefix} ||= '';
 
     croak 'No DB handle provided' unless $args{dbh};
     PGObject->call_procedure(%args);

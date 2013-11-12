@@ -10,7 +10,7 @@ my %hash = (
 );
 
 plan skip_all => 'Not set up for db tests' unless $ENV{TEST_DB};
-plan tests => 6;
+plan tests => 8;
 my $dbh1 = DBI->connect('dbi:Pg:dbname=postgres', 'postgres');
 $dbh1->do('CREATE DATABASE pgobject_test_db') if $dbh1;
 
@@ -26,7 +26,7 @@ $dbh->do('
 my $answer = 72;
 
 SKIP: {
-   skip 'No database connection', 6 unless $dbh;
+   skip 'No database connection', 8 unless $dbh;
    my $obj = PGObject::Simple->new(%hash);
    $obj->set_dbh($dbh);
    my ($ref) = $obj->call_procedure(
@@ -34,6 +34,14 @@ SKIP: {
       args => ['text', 'text2', '5', '30']
    );
    is ($ref->{foobar}, 159, 'Correct value returned, call_procedure');
+
+   ($ref) = PGObject::Simple->call_procedure(
+      dbh => $dbh,
+      funcname => 'foobar',
+      args => ['text', 'text2', '5', '30']
+   );
+   is ($ref->{foobar}, 159, 'Correct value returned, call_procedure, package invocation');
+
 
    ($ref) = $obj->call_procedure(
       funcname => 'foobar',
@@ -48,6 +56,13 @@ SKIP: {
    );
 
    is ($ref->{foobar}, $answer, 'Correct value returned, call_dbmethod');
+   ($ref) = PGObject::Simple->call_dbmethod(
+      funcname => 'foobar',
+          args => \%hash,
+           dbh => $dbh,
+   );
+   is ($ref->{foobar}, $answer, 'Correct value returned, call_dbmethod');
+       
 
    ($ref) = $obj->call_dbmethod(
       funcname => 'foobar',
