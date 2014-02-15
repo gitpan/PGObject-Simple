@@ -12,11 +12,11 @@ PGObject::Simple - Minimalist stored procedure mapper based on LedgerSMB's DBObj
 
 =head1 VERSION
 
-Version 1.4
+Version 1.5
 
 =cut
 
-our $VERSION = '1.4';
+our $VERSION = '1.5';
 
 
 =head1 SYNOPSIS
@@ -155,6 +155,9 @@ object property.  The $args{args} hashref can be used to override arguments by
 name.  Unknown properties are handled simply by passing a NULL in, so the
 stored procedures should be prepared to handle these.
 
+As with call_procedure below, this returns a single hashref when called in a
+scalar context, and a list of hashrefs when called in a list context.
+
 =cut
 
 sub call_dbmethod {
@@ -174,7 +177,7 @@ sub call_dbmethod {
         $arg->{name} =~ s/^in_//;
         my $db_arg = $self->{$arg->{name}} if ref $self;
         if ($args{args}->{$arg->{name}}){
-           $db_arg = $args{args}->{$arg->{name}};
+            $db_arg = $args{args}->{$arg->{name}};
         }
         if (eval {$db_arg->can('to_db')}){
            $db_arg = $db_arg->to_db;
@@ -198,6 +201,10 @@ passes the currently attached db connection in.  We use the previously set
 funcprefix and dbh by default but other values can be passed in to override the
 default object's values.
 
+This returns a single hashref when called in a scalar context, and a list of 
+hashrefs when called in a list context.  When called in a scalar context it 
+simply returns the single first row returned.
+
 =cut
 
 sub call_procedure {
@@ -212,7 +219,9 @@ sub call_procedure {
     $args{funcprefix} ||= '';
 
     croak 'No DB handle provided' unless $args{dbh};
-    PGObject->call_procedure(%args);
+    my @rows = PGObject->call_procedure(%args);
+    return shift @rows unless wantarray;
+    return @rows;
 }
 
 =head1 WRITING CLASSES WITH PGObject::Simple

@@ -1,5 +1,10 @@
 Revision history for PGObject-Simple
 
+1.5	2014-02-16
+	1. Added contextual return handling so that db procedure calls can 
+	return either the first row of the set (usually useful where that is
+	the only row) or the full set.
+
 1.4	2013-11-12
 	1.  Fixed __PACKAGE__->call_dbmethod interface so it works.
 
