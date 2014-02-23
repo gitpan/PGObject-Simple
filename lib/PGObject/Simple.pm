@@ -12,11 +12,11 @@ PGObject::Simple - Minimalist stored procedure mapper based on LedgerSMB's DBObj
 
 =head1 VERSION
 
-Version 1.5
+Version 1.6
 
 =cut
 
-our $VERSION = '1.5';
+our $VERSION = '1.6';
 
 
 =head1 SYNOPSIS
@@ -133,6 +133,19 @@ sub _set_funcprefix {
     $self->{_func_prefix} = $funcprefix;
 }
 
+=head2 _set_funcschema 
+
+This sets the default funcschema for future calls.  This is overwridden by 
+per-call arguments, (PGObject::Util::DBMethod provides for such overrides on a
+per-method basis).
+
+=cut
+
+sub _set_funcschema {
+    my ($self, $funcschema) = @_;
+    $self->{_func_schema} = $funcschema;
+}
+
 =head2 _set_registry
 
 This sets the registry for future calls.  The idea here is that this allows for
@@ -168,6 +181,7 @@ sub call_dbmethod {
         $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};
 
         $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
+        $args{funcschema} = $self->{_func_schema} if !defined $args{funcschema};
     }
     $args{funcprefix} ||= '';
     my $info = PGObject->function_info(%args);
@@ -212,6 +226,7 @@ sub call_procedure {
     my %args = @_;
     if (eval { $self->isa(__PACKAGE__) } and ref $self ){
         $args{funcprefix} = $self->{_func_prefix} if !defined $args{funcprefix};
+        $args{funcschema} = $self->{_func_schema} if !defined $args{funcschema};
         $args{registry} = $self->{_registry} if !defined $args{registry};
 
         $args{dbh} = $self->{_DBH} if $self->{_DBH} and !$args{dbh};

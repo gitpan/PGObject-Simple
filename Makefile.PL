@@ -9,11 +9,13 @@ WriteMakefile(
     VERSION_FROM        => 'lib/PGObject/Simple.pm',
     ABSTRACT_FROM       => 'lib/PGObject/Simple.pm',
     ($ExtUtils::MakeMaker::VERSION >= 6.3002
-      ? ('LICENSE'=> 'perl')
+      ? ('LICENSE'=> 'BSD')
       : ()),
     PL_FILES            => {},
     PREREQ_PM => {
         'PGObject'   => 1.1,
+    },
+    BUILD_REQUIRES => {
         'Test::More' => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },

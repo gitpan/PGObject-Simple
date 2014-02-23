@@ -4,9 +4,9 @@
       "Chris Travers <chris.travers@gmail.com>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "ExtUtils::MakeMaker version 6.62, CPAN::Meta::Converter version 2.120921",
+   "generated_by" : "ExtUtils::MakeMaker version 6.6302, CPAN::Meta::Converter version 2.120921",
    "license" : [
-      "perl_5"
+      "bsd"
    ],
    "meta-spec" : {
       "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
@@ -22,7 +22,7 @@
    "prereqs" : {
       "build" : {
          "requires" : {
-            "ExtUtils::MakeMaker" : "0"
+            "Test::More" : "0"
          }
       },
       "configure" : {
@@ -32,11 +32,10 @@
       },
       "runtime" : {
          "requires" : {
-            "PGObject" : "1.1",
-            "Test::More" : "0"
+            "PGObject" : "1.1"
          }
       }
    },
    "release_status" : "stable",
-   "version" : "1.5"
+   "version" : "1.6"
 }

@@ -9,8 +9,8 @@ my %hash = (
    id  => '33',
 );
 
-plan skip_all => 'Not set up for db tests' unless $ENV{TEST_DB};
-plan tests => 8;
+plan skip_all => 'Not set up for db tests' unless $ENV{DB_TESTING};
+plan tests => 9;
 my $dbh1 = DBI->connect('dbi:Pg:dbname=postgres', 'postgres');
 $dbh1->do('CREATE DATABASE pgobject_test_db') if $dbh1;
 
@@ -20,6 +20,15 @@ $dbh->do('
    CREATE FUNCTION public.foobar (in_foo text, in_bar text, in_baz int, in_id int)
       RETURNS int language sql as $$
           SELECT char_length($1) + char_length($2) + $3 * $4;
+      $$;
+') if $dbh;
+
+$dbh->do('CREATE SCHEMA test;');
+
+$dbh->do('
+   CREATE FUNCTION test.foobar (in_foo text, in_bar text, in_baz int, in_id int)
+      RETURNS int language sql as $$
+          SELECT 2 * (char_length($1) + char_length($2) + $3 * $4);
       $$;
 ') if $dbh;
 
@@ -83,6 +92,13 @@ SKIP: {
    );
    is ($ref->{foobar}, 14, 'Correct value returned, call_dbmethod w/exp. pre.');
 
+   $obj->_set_funcschema('test');
+   $obj->_set_funcprefix('');
+   ($ref) = $obj->call_dbmethod(
+      funcname => 'foobar'
+   );
+
+   is ($ref->{foobar}, $answer * 2, 'Correct value returned, call_dbmethod');
 }
 
 $dbh->disconnect if $dbh;
