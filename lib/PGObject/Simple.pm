@@ -12,11 +12,11 @@ PGObject::Simple - Minimalist stored procedure mapper based on LedgerSMB's DBObj
 
 =head1 VERSION
 
-Version 1.6
+Version 1.7
 
 =cut
 
-our $VERSION = '1.6';
+our $VERSION = '1.7';
 
 
 =head1 SYNOPSIS
@@ -102,7 +102,10 @@ sub new {
     my $ref = {};
     $ref->{$_} = $args{$_} for keys %args;
     bless ($ref, $self);
-    $ref->set_dbh($ref->{dbh}) if $ref->{dbh};
+    $ref->set_dbh($ref->{dbh});
+    $ref->_set_funcprefix($ref->{_funcprefix});
+    $ref->_set_funcschema($ref->{_funcschema});
+    $ref->_set_registry($ref->{_registry});
     return $ref;
 }
 
@@ -336,7 +339,7 @@ L<http://search.cpan.org/dist/PGObject-Simple/>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2013 Chris Travers.
+Copyright 2013-2014 Chris Travers.
 
 Redistribution and use in source and compiled forms with or without 
 modification, are permitted provided that the following conditions are met:

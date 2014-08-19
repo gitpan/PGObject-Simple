@@ -1,5 +1,9 @@
 Revision history for PGObject-Simple
 
+1.7     2014-08-19
+        1. Solved a number of issues regarding overriding defaults for 
+        application frameworks
+
 1.6	2014-02-24
 	1. Added per class schema handling (overridden by per call handling).
 	2. Re-arranged requirements in Makefile.PL
