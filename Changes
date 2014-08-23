@@ -1,5 +1,8 @@
 Revision history for PGObject-Simple
 
+1.8     2014-08-21
+        1. Made use of catalog-lookups memoization-safe.
+
 1.7     2014-08-19
         1. Solved a number of issues regarding overriding defaults for 
         application frameworks

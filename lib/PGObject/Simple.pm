@@ -12,11 +12,11 @@ PGObject::Simple - Minimalist stored procedure mapper based on LedgerSMB's DBObj
 
 =head1 VERSION
 
-Version 1.7
+Version 1.8
 
 =cut
 
-our $VERSION = '1.7';
+our $VERSION = '1.8';
 
 
 =head1 SYNOPSIS
@@ -189,22 +189,19 @@ sub call_dbmethod {
     $args{funcprefix} ||= '';
     my $info = PGObject->function_info(%args);
 
-    my $dbargs = [];
-    for my $arg (@{$info->{args}}){
-        $arg->{name} =~ s/^in_//;
-        my $db_arg = $self->{$arg->{name}} if ref $self;
-        if ($args{args}->{$arg->{name}}){
-            $db_arg = $args{args}->{$arg->{name}};
-        }
-        if (eval {$db_arg->can('to_db')}){
-           $db_arg = $db_arg->to_db;
-        }
-        if ($arg->{type} eq 'bytea'){
-           $db_arg = { type => 'bytea', value => $db_arg};
-        }
-        push @$dbargs, $db_arg;
-    }
-    $args{args} = $dbargs;
+    my $arglist = [];
+    @{$arglist} = map {
+        my $argname = $_->{name};
+        my $db_arg;
+        $argname =~ s/^in_//;
+        $db_arg = $self->{$argname} if ref $self;
+        $db_arg = $args{args}->{$argname} if exists $args{args}->{$argname};
+        $db_arg = $db_arg->to_db if eval {$db_arg->can('to_db')};
+        $db_arg = { type => 'bytea', value => $db_arg} if $_->{type} eq 'bytea';
+        $db_arg;
+    } @{$info->{args}};
+    $args{args} = $arglist;
+
     # The conditional return is necessary since the object may carry a registry
     # --CT
     return $self->call_procedure(%args) if ref $self;
